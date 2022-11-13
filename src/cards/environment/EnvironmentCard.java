@@ -2,11 +2,14 @@ package cards.environment;
 
 import cards.Card;
 import cards.CardType;
+import cards.minion.MinionCard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.CardInput;
+import game.GameTable;
 
+import java.nio.charset.MalformedInputException;
 import java.util.ArrayList;
 
 public class EnvironmentCard extends Card {
@@ -42,5 +45,33 @@ public class EnvironmentCard extends Card {
 
     public CardType getType() {
         return type;
+    }
+
+    public void useAbility(MinionCard attackedCard) {}
+    public void useAbilityOnRow(int row, GameTable table) {
+        for (int position = 0; position < 5; position++) {
+            MinionCard attackedCard = table.getCardFrom(row, position);
+            if (attackedCard != null) {
+                useAbility(attackedCard);
+            }
+        }
+        table.checkForZeroHealth(row);
+    }
+
+    @Override
+    public String toString() {
+        return "{\n"
+                +  "mana="
+                + mana
+                +  ",\n description='"
+                + description
+                + '\''
+                + ",\n colors="
+                + colors
+                + ",\n name='"
+                +  "\n"
+                + name
+                + '\''
+                + '}';
     }
 }

@@ -46,9 +46,11 @@ public class Player {
             cardsInHand = new ArrayList<>();
 
         if (currentDeck.getCards().size() != 0) {
-            cardsInHand.add(currentDeck.getCards().remove(0));
+            Card newCard = currentDeck.getCards().remove(0);
+            cardsInHand.add(newCard);
         }
     }
+
     public void setCurrentDeck(int numberOfDeck, int shuffleSeed) {
         // Deep copy so the modifications don t affect the original decks
         currentDeck = new Deck(decks.get(numberOfDeck));
@@ -58,59 +60,75 @@ public class Player {
     }
 
     public void addManaForNewRound() {
-        if (numberOfGamesPlayed <= 10)
+        if (numberOfGamesPlayed <= 10) {
             mana += numberOfGamesPlayed;
+            System.out.println("MANA ADDED: " + numberOfGamesPlayed);
+            System.out.println("NEW MANA: " + mana);
+        }
+    }
+
+    public void addMana(int manaAdded) {
+        mana += manaAdded;
+    }
+
+    public void subtractMana(int manaSubtracted) {
+        mana -= manaSubtracted;
+        System.out.println("MANA SUBTRACTED: " + manaSubtracted);
+        System.out.println("NEW MANA: " + mana);
     }
 
     public void setHeroCard(CardInput card) {
-        heroCard = (HeroCard)Card.getCardByType(new Card(card));
+        heroCard = (HeroCard) Card.getCardByType(new Card(card));
     }
 
     public ArrayList<Card> getCardsInHand() {
         return cardsInHand;
     }
 
-    public void getPlayerMana() {
-
-    }
-
-    public void getEnvironmentCardsInHand() {
-
-    }
-
     public Deck getCurrentDeck() {
         return currentDeck;
     }
+
     public int getMana() {
         return mana;
     }
+
     public HeroCard getHeroCard() {
         return heroCard;
     }
+
     public static int getNumberOfGamesPlayed() {
         return numberOfGamesPlayed;
     }
+
     public int getNumberOfWins() {
         return numberOfWins;
     }
+
     public ArrayList<Deck> getDecks() {
         return decks;
     }
+
     public void setMana(int mana) {
         this.mana = mana;
     }
+
     public void setNumberOfWins(int numberOfWins) {
         this.numberOfWins = numberOfWins;
     }
+
     public static void setNumberOfGamesPlayed(int numberOfGamesPlayed) {
         Player.numberOfGamesPlayed = numberOfGamesPlayed;
     }
+
     public void setCardsInHand(ArrayList<Card> cardsInHand) {
         this.cardsInHand = cardsInHand;
     }
+
     public void setCurrentDeck(Deck currentDeck) {
         this.currentDeck = currentDeck;
     }
+
     public void setDecks(ArrayList<Deck> decks) {
         this.decks = decks;
     }

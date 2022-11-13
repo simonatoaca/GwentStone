@@ -3,6 +3,7 @@ package game;
 import cards.Card;
 import cards.CardType;
 import cards.RowPositionForCard;
+import cards.environment.EnvironmentCard;
 import cards.minion.MinionCard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -25,13 +26,7 @@ public class Game {
     private static GameTable table;
     private final Input inputData;
     private static ArrayNode output;
-
-    enum playerTurn {
-        PLAYER1,
-        PLAYER2
-    }
-
-    static private playerTurn currentTurn;
+    static private PlayerTurn currentTurn;
 
     private Game(Input inputData, ArrayNode output) {
         player1 = new Player();
@@ -58,16 +53,15 @@ public class Game {
         player2.setHeroCard(inputData.getPlayerTwoHero());
 
         // Set turn
-        if (inputData.getStartingPlayer() == 0) {
-            currentTurn = playerTurn.PLAYER1;
+        if (inputData.getStartingPlayer() == 1) {
+            currentTurn = PlayerTurn.PLAYER1;
         } else {
-            currentTurn = playerTurn.PLAYER2;
+            currentTurn = PlayerTurn.PLAYER2;
         }
     }
 
     static public void startGame(Input inputData, ArrayNode output) {
-
-        System.out.println("--------STARTED GAME-----------");
+        System.out.println("--------STARTED GAME-----------\n------------------");
         // Created new instance so the game is new
         gameInstance = new Game(inputData, output);
 
@@ -80,20 +74,20 @@ public class Game {
 
             Iterator<ActionsInput> actions = gameInput.getActions().iterator();
 
-            // When this is even, a new round has started and the players get one more card each
+            // When this is even, a new round has started
             int turnNumber = 0;
 
             while (actions.hasNext()) {
+                System.out.println("PLAYER INDEX: " + currentTurn);
                 if (turnNumber % 2 == 0) {
                     player1.addCardToHand();
                     player2.addCardToHand();
 
-                    // Updadte mana
+                    // Update mana
                     Player.setNumberOfGamesPlayed(++gameInstance.totalGamesPlayed);
                     player1.addManaForNewRound();
                     player2.addManaForNewRound();
                 }
-
                 playTurn(actions);
                 turnNumber++;
             }
@@ -101,29 +95,26 @@ public class Game {
     }
 
     public static void playTurn(Iterator<ActionsInput> actions) {
-        Player currentPlayer = (currentTurn == playerTurn.PLAYER1) ? player1 : player2;
-        System.out.println("PLAYER INDEX: " + currentTurn);
+        Player currentPlayer = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
 
         // get actions until end turn or end of actions
         ActionsInput currentAction;
         do {
             currentAction = actions.next();
             if (Objects.equals(currentAction.getCommand(), "endPlayerTurn")) {
+                // Switch turn
+                currentTurn = (currentTurn == PlayerTurn.PLAYER1) ? PlayerTurn.PLAYER2 : PlayerTurn.PLAYER1;
                 break;
             }
-            // testing purposes
-            System.out.println(currentAction.getCommand() + currentAction.getPlayerIdx());
 
             // action handler
             actionHandler(currentAction);
 
         } while (actions.hasNext());
         System.out.println("-------END TURN--------");
-        // De-freeze this player's cards
 
-        // Switch turn
-        currentTurn = (currentTurn == Game.playerTurn.PLAYER1) ?
-                Game.playerTurn.PLAYER2 : Game.playerTurn.PLAYER1;
+        // De-freeze this player's cards
+        table.unfreezeCardsOfPlayer(currentTurn);
     }
 
     static public void actionHandler(ActionsInput currentAction) {
@@ -133,9 +124,121 @@ public class Game {
             case "getPlayerHero" -> getPlayerHero(currentAction);
             case "placeCard" -> placeCard(currentAction);
             case "getCardsInHand" -> getCardsInHand(currentAction);
+            case "getEnvironmentCardsInHand" -> getEnvironmentCardsInHand(currentAction);
             case "getCardsOnTable" -> getCardsOnTable();
             case "getPlayerMana" -> getPlayerMana(currentAction);
+            case "getCardAtPosition" -> getCardAtPosition(currentAction);
+            case "useEnvironmentCard" -> useEnvironmentCard(currentAction);
+            case "getFrozenCardsOnTable" -> getFrozenCardsOnTable(currentAction);
         }
+    }
+
+    static public void getFrozenCardsOnTable(ActionsInput currentAction) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        objectNode.put("command", "getFrozenCardsOnTable");
+
+        ArrayNode cards = objectMapper.createArrayNode();
+        for (int row = 0; row < 4; row++) {
+            for (int col = 0; col < 5; col++) {
+                MinionCard card = table.getCardFrom(row, col);
+                if (card != null && card.isFrozen()) {
+                    cards.add(card.getCardPrint());
+                }
+            }
+        }
+
+        objectNode.set("output", cards);
+        output.add(objectNode);
+    }
+    static public void useEnvironmentCard(ActionsInput currentAction) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        int handIdx = currentAction.getHandIdx();
+        int affectedRow = currentAction.getAffectedRow();
+
+        objectNode.put("command", "useEnvironmentCard");
+        objectNode.put("handIdx", handIdx);
+        objectNode.put("affectedRow", affectedRow);
+
+        Player player = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
+        Card cardInHand = player.getCardsInHand().get(handIdx);
+        System.out.println("USE ENVIRONMENT CARD" +  cardInHand);
+        if (cardInHand.getType() != CardType.ENVIRONMENT) {
+            objectNode.put("error", "Chosen card is not of type environment.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (player.getMana() < cardInHand.getMana()) {
+            objectNode.put("error", "Not enough mana to use environment card.");
+            output.add(objectNode);
+            return;
+        }
+
+        if ((currentTurn == PlayerTurn.PLAYER1 && (affectedRow == 2 || affectedRow == 3)) ||
+                (currentTurn == PlayerTurn.PLAYER2 && (affectedRow == 0 || affectedRow == 1))) {
+            objectNode.put("error", "Chosen row does not belong to the enemy.");
+            output.add(objectNode);
+            return;
+        }
+
+        int mirroringRow = 0;
+        switch (affectedRow) {
+            case 0 -> mirroringRow = 3;
+            case 1 -> mirroringRow = 2;
+            case 2 -> mirroringRow = 1;
+        }
+
+        if (Objects.equals(cardInHand.getName(), "Heart Hound")) {
+            if (!table.isSpaceOnRow(mirroringRow)) {
+                objectNode.put("error", "Cannot steal enemy card since the player's row is full.");
+                output.add(objectNode);
+                return;
+            }
+        }
+
+        ((EnvironmentCard)cardInHand).useAbilityOnRow(affectedRow, table);
+
+        player.subtractMana(cardInHand.getMana());
+        player.getCardsInHand().remove(handIdx);
+    }
+    static public void getCardAtPosition(ActionsInput currentAction) {
+        int x = currentAction.getX();
+        int y = currentAction.getY();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        int playerIdx = currentAction.getPlayerIdx();
+        objectNode.put("command", "getCardAtPosition");
+        MinionCard card = table.getCardFrom(x,y);
+        if (card != null)
+            objectNode.set("output", card.getCardPrint());
+        else
+            objectNode.put("output", "No card at that position.");
+
+        output.add(objectNode);
+    }
+
+    static public void getEnvironmentCardsInHand(ActionsInput currentAction) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        int playerIdx = currentAction.getPlayerIdx();
+        objectNode.put("command", "getEnvironmentCardsInHand");
+        objectNode.put("playerIdx", playerIdx);
+
+        ArrayNode cards = objectMapper.createArrayNode();
+        Player player = (playerIdx == 1) ? player1 : player2;
+        for (Card card : player.getCardsInHand()) {
+            if (card.getType() == CardType.ENVIRONMENT)
+                cards.add(card.getCardPrint());
+        }
+        objectNode.set("output", cards);
+        output.add(objectNode);
     }
 
     static public void getPlayerMana(ActionsInput currentAction) {
@@ -194,8 +297,16 @@ public class Game {
     }
 
     static public void placeCard(ActionsInput currentAction) {
-        Player currentPlayer = (currentTurn == playerTurn.PLAYER1) ? player1 : player2;
-        Card card = currentPlayer.getCardsInHand().get(currentAction.getHandIdx());
+        Player currentPlayer = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
+        Card card;
+        if (currentPlayer.getCardsInHand().size() > currentAction.getHandIdx()) {
+            card = currentPlayer.getCardsInHand().get(currentAction.getHandIdx());
+        } else {
+            System.out.println("out of bounds");
+            return;
+        }
+
+        System.out.println("PLACE CARD from index " + currentAction.getHandIdx() +"\n" + currentPlayer.getCardsInHand());
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -203,29 +314,27 @@ public class Game {
         objectNode.put("handIdx", currentAction.getHandIdx());
 
         if (card.getType() == CardType.ENVIRONMENT) {
-            String message = "Cannot place environment card on table.";
-            objectNode.put("error", message);
+            objectNode.put("error", "Cannot place environment card on table.");
             output.add(objectNode);
             return;
         }
 
         if (card.getMana() > currentPlayer.getMana()) {
-            String message = "Not enough mana to place card on table.";
-            objectNode.put("error", message);
+            objectNode.put("error", "Not enough mana to place card on table.");
             output.add(objectNode);
             return;
         }
 
         int rowForCard;
+        System.out.println(((MinionCard)card).getRowPosition());
         if (((MinionCard)card).getRowPosition() == RowPositionForCard.FRONT) {
-            rowForCard = (currentTurn == playerTurn.PLAYER1) ? 2 : 1;
+            rowForCard = (currentTurn == PlayerTurn.PLAYER1) ? 2 : 1;
         } else {
-            rowForCard = (currentTurn == playerTurn.PLAYER1) ? 3 : 0;
+            rowForCard = (currentTurn == PlayerTurn.PLAYER1) ? 3 : 0;
         }
 
         if (!table.isSpaceOnRow(rowForCard)) {
-            String message = "Cannot place card on table since row is full.";
-            objectNode.put("error", message);
+            objectNode.put("error", "Cannot place card on table since row is full.");
             output.add(objectNode);
             return;
         }
@@ -233,15 +342,11 @@ public class Game {
         // Update table
         table.addToRow(rowForCard, (MinionCard) card);
 
+        // Update player mana
+        currentPlayer.subtractMana(card.getMana());
+
         // Remove from hand
         currentPlayer.getCardsInHand().remove(currentAction.getHandIdx());
-
-        // Update player mana
-        currentPlayer.setMana(currentPlayer.getMana() - card.getMana());
-
-        // Testing purposes
-        //MinionCard minionCard = table.getCardFrom(rowForCard, 0);
-       // System.out.println(minionCard);
     }
 
     static public void getPlayerHero(ActionsInput currentAction) {
@@ -281,7 +386,7 @@ public class Game {
         ObjectNode objectNode = objectMapper.createObjectNode();
 
         objectNode.put("command", "getPlayerTurn");
-        objectNode.put("output", (currentTurn == playerTurn.PLAYER1) ? 1 : 2);
+        objectNode.put("output", (currentTurn == PlayerTurn.PLAYER1) ? 1 : 2);
 
         output.add(objectNode);
     }

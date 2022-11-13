@@ -1,10 +1,12 @@
 package cards.minion;
 
 import cards.Card;
+import cards.CardType;
 import cards.RowPositionForCard;
 
 public class Goliath extends MinionCard {
     private final RowPositionForCard rowPosition = RowPositionForCard.FRONT;
+    private final CardType type = CardType.MINION;
 
     public Goliath(Card card) {
         super(card);
@@ -12,5 +14,10 @@ public class Goliath extends MinionCard {
 
     public RowPositionForCard getRowPosition() {
         return rowPosition;
+    }
+
+    @Override
+    public CardType getType() {
+        return type;
     }
 }
