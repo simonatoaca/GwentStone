@@ -29,7 +29,6 @@ public class Winterfell extends EnvironmentCard {
     @Override
     public void useAbility(MinionCard attackedCard) {
         attackedCard.freezeCard();
-        System.out.println("FROZE CARD\n" + attackedCard);
     }
 
     @Override
