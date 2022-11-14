@@ -11,13 +11,7 @@ import java.util.ArrayList;
 
 public class HeroCard extends Card {
 
-    private int mana;
-    private final String description;
-    private final ArrayList<String> colors;
-    private final String name;
-    private int health;
-
-    private final CardType type = CardType.HERO;
+    protected final CardType type = CardType.HERO;
 
     public HeroCard(Card card) {
         mana = card.getMana();
@@ -47,5 +41,24 @@ public class HeroCard extends Card {
 
     public CardType getType() {
         return type;
+    }
+
+    @Override
+    public String toString() {
+        return "{\n"
+                +  "mana="
+                + mana
+                + ",\n health="
+                + health
+                +  ",\n description='"
+                + description
+                + '\''
+                + ",\n colors="
+                + colors
+                + ",\n name='"
+                +  "\n"
+                + name
+                + '\''
+                + '}';
     }
 }

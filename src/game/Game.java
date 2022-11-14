@@ -4,14 +4,12 @@ import cards.Card;
 import cards.CardType;
 import cards.RowPositionForCard;
 import cards.environment.EnvironmentCard;
+import cards.hero.HeroCard;
 import cards.minion.MinionCard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import fileio.ActionsInput;
-import fileio.GameInput;
-import fileio.Input;
-import fileio.StartGameInput;
+import fileio.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,12 +26,15 @@ public class Game {
     private static ArrayNode output;
     static private PlayerTurn currentTurn;
 
+    private static boolean gameEnd = false;
+
     private Game(Input inputData, ArrayNode output) {
         player1 = new Player();
         player2 = new Player();
         table = new GameTable();
         this.inputData = inputData;
         Game.output = output;
+        gameEnd = false;
     }
 
     /**
@@ -102,6 +103,9 @@ public class Game {
         do {
             currentAction = actions.next();
             if (Objects.equals(currentAction.getCommand(), "endPlayerTurn")) {
+                table.unfreezeCardsOfPlayer(currentTurn);
+                table.cardsOfPlayerCanAttackAgain(currentTurn);
+
                 // Switch turn
                 currentTurn = (currentTurn == PlayerTurn.PLAYER1) ? PlayerTurn.PLAYER2 : PlayerTurn.PLAYER1;
                 break;
@@ -109,12 +113,8 @@ public class Game {
 
             // action handler
             actionHandler(currentAction);
-
         } while (actions.hasNext());
         System.out.println("-------END TURN--------");
-
-        // De-freeze this player's cards
-        table.unfreezeCardsOfPlayer(currentTurn);
     }
 
     static public void actionHandler(ActionsInput currentAction) {
@@ -130,7 +130,196 @@ public class Game {
             case "getCardAtPosition" -> getCardAtPosition(currentAction);
             case "useEnvironmentCard" -> useEnvironmentCard(currentAction);
             case "getFrozenCardsOnTable" -> getFrozenCardsOnTable(currentAction);
+            case "cardUsesAttack" -> cardUsesAttack(currentAction);
+            case "cardUsesAbility" -> cardUsesAbility(currentAction);
+            case "useAttackHero" -> useAttackHero(currentAction);
+            case "getTotalGamesPlayed" -> getTotalGamesPlayed();
+            case "getPlayerOneWins" -> getPLayerOneWins();
+            case "getPlayerTwoWins" -> getPLayerTwoWins();
         }
+    }
+
+    static public void useAttackHero(ActionsInput currentAction) {
+        if (gameEnd) return;
+        Coordinates cardAttackerCoords = currentAction.getCardAttacker();
+        MinionCard cardAttacker = table.getCardFrom(cardAttackerCoords.getX(), cardAttackerCoords.getY());
+        Player attackedPlayer = (cardAttackerCoords.getX() < 2) ? player1 : player2;
+
+        HeroCard heroAttacked = attackedPlayer.getHeroCard();
+
+        System.out.println("-------------ATTACK HERO-------------");
+        System.out.println(cardAttacker);
+        System.out.println(heroAttacked);
+
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+
+        objectNode.put("command", "useAttackHero");
+
+        ObjectNode objectNode1 = objectMapper.createObjectNode();
+        objectNode1.put("x", cardAttackerCoords.getX());
+        objectNode1.put("y", cardAttackerCoords.getY());
+
+        objectNode.set("cardAttacker", objectNode1);
+
+        if (cardAttacker.isFrozen()) {
+            objectNode.put("error", "Attacker card is frozen.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (!cardAttacker.canAttack()) {
+            objectNode.put("error", "Attacker card has already attacked this turn.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (table.attackedPlayerHasTankCard(cardAttackerCoords.getX())) {
+            objectNode.put("error", "Attacked card is not of type 'Tank'.");
+            output.add(objectNode);
+            return;
+        }
+
+        cardAttacker.useAttackHero(heroAttacked);
+
+        if (heroAttacked.getHealth() <= 0) {
+            ObjectNode objectNode2 = objectMapper.createObjectNode();
+            String message = "Player " + ((cardAttackerCoords.getX() < 2) ? "two" : "one") + " killed the enemy hero.";
+            objectNode2.put("gameEnded", message);
+            output.add(objectNode2);
+            gameEnd = true;
+        }
+    }
+
+    static public void cardUsesAbility(ActionsInput currentAction) {
+        if (gameEnd) return;
+        Coordinates cardAttackerCoords = currentAction.getCardAttacker();
+        Coordinates cardAttackedCoords = currentAction.getCardAttacked();
+        MinionCard cardAttacker = table.getCardFrom(cardAttackerCoords.getX(), cardAttackerCoords.getY());
+        MinionCard cardAttacked = table.getCardFrom(cardAttackedCoords.getX(), cardAttackedCoords.getY());
+
+        System.out.println("-------------ABILITY-------------");
+        System.out.println(cardAttacker);
+        System.out.println(cardAttacked);
+
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        objectNode.put("command", "cardUsesAbility");
+
+        ObjectNode objectNode1 = objectMapper.createObjectNode();
+        objectNode1.put("x", cardAttackerCoords.getX());
+        objectNode1.put("y", cardAttackerCoords.getY());
+
+        objectNode.set("cardAttacker", objectNode1);
+
+        ObjectNode objectNode2 = objectMapper.createObjectNode();
+        objectNode2.put("x", cardAttackedCoords.getX());
+        objectNode2.put("y", cardAttackedCoords.getY());
+
+        objectNode.set("cardAttacked", objectNode2);
+
+        if (cardAttacker.isFrozen()) {
+            objectNode.put("error", "Attacker card is frozen.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (!cardAttacker.canAttack()) {
+            objectNode.put("error", "Attacker card has already attacked this turn.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (Objects.equals(cardAttacker.getName(), "Disciple")) {
+            if (MinionCard.attackedCardBelongsToEnemy(cardAttackerCoords.getX(), cardAttackedCoords.getX())) {
+                objectNode.put("error", "Attacked card does not belong to the current player.");
+                output.add(objectNode);
+                return;
+            }
+        } else {
+            if (!MinionCard.attackedCardBelongsToEnemy(cardAttackerCoords.getX(), cardAttackedCoords.getX())) {
+                objectNode.put("error", "Attacked card does not belong to the enemy.");
+                output.add(objectNode);
+                return;
+            }
+            if (table.attackedPlayerHasTankCard(cardAttackerCoords.getX()) && !cardAttacked.isTank()) {
+                objectNode.put("error", "Attacked card is not of type 'Tank'.");
+                output.add(objectNode);
+                return;
+            }
+        }
+
+        if (cardAttacked == null) {
+            System.out.println("card attacked is null");
+            return;
+        }
+
+        cardAttacker.useAbility(cardAttacked, table, cardAttackedCoords.getX());
+    }
+
+    static public void cardUsesAttack(ActionsInput currentAction) {
+        if (gameEnd) return;
+        Coordinates cardAttackerCoords = currentAction.getCardAttacker();
+        Coordinates cardAttackedCoords = currentAction.getCardAttacked();
+        MinionCard cardAttacker = table.getCardFrom(cardAttackerCoords.getX(), cardAttackerCoords.getY());
+        MinionCard cardAttacked = table.getCardFrom(cardAttackedCoords.getX(), cardAttackedCoords.getY());
+
+        System.out.println("-------------ATTACK-------------");
+        System.out.println(cardAttacker);
+        System.out.println(cardAttacked);
+
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        objectNode.put("command", "cardUsesAttack");
+
+        ObjectNode objectNode1 = objectMapper.createObjectNode();
+        objectNode1.put("x", cardAttackerCoords.getX());
+        objectNode1.put("y", cardAttackerCoords.getY());
+
+        objectNode.set("cardAttacker", objectNode1);
+
+        ObjectNode objectNode2 = objectMapper.createObjectNode();
+        objectNode2.put("x", cardAttackedCoords.getX());
+        objectNode2.put("y", cardAttackedCoords.getY());
+
+        objectNode.set("cardAttacked", objectNode2);
+
+        if (!MinionCard.attackedCardBelongsToEnemy(cardAttackerCoords.getX(), cardAttackedCoords.getX())) {
+            objectNode.put("error", "Attacked card does not belong to the enemy.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (!cardAttacker.canAttack()) {
+            objectNode.put("error", "Attacker card has already attacked this turn.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (cardAttacker.isFrozen()) {
+            objectNode.put("error", "Attacker card is frozen.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (table.attackedPlayerHasTankCard(cardAttackerCoords.getX()) && !cardAttacked.isTank()) {
+            objectNode.put("error", "Attacked card is not of type 'Tank'.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (cardAttacked == null) {
+            System.out.println("card attacked is null");
+            return;
+        }
+
+        cardAttacker.useAttack(cardAttacked, table, cardAttackedCoords.getX());
     }
 
     static public void getFrozenCardsOnTable(ActionsInput currentAction) {
@@ -153,6 +342,7 @@ public class Game {
         output.add(objectNode);
     }
     static public void useEnvironmentCard(ActionsInput currentAction) {
+        if (gameEnd) return;
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -297,6 +487,7 @@ public class Game {
     }
 
     static public void placeCard(ActionsInput currentAction) {
+        if (gameEnd) return;
         Player currentPlayer = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
         Card card;
         if (currentPlayer.getCardsInHand().size() > currentAction.getHandIdx()) {
@@ -305,8 +496,6 @@ public class Game {
             System.out.println("out of bounds");
             return;
         }
-
-        System.out.println("PLACE CARD from index " + currentAction.getHandIdx() +"\n" + currentPlayer.getCardsInHand());
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();

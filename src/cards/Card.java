@@ -12,12 +12,12 @@ import fileio.CardInput;
 
 import java.util.ArrayList;
 public class Card {
-    private int mana;
-    private int attackDamage;
-    private int health;
-    private String description;
-    private ArrayList<String> colors;
-    private String name;
+    protected int mana;
+    protected int attackDamage;
+    protected int health;
+    protected String description;
+    protected ArrayList<String> colors;
+    protected String name;
 
     private CardType type;
 
@@ -130,6 +130,14 @@ public class Card {
         objectNode.put("name", name);
 
         return objectNode;
+    }
+
+    public void addHealth(int addedHealth) {
+        health += addedHealth;
+    }
+
+    public void subtractHealth(int subtractedHealth) {
+        health -= subtractedHealth;
     }
 
     public int getMana() {

@@ -10,6 +10,7 @@ public class Warden extends MinionCard {
 
     public Warden(Card card) {
         super(card);
+        isTank = true;
     }
     public RowPositionForCard getRowPosition() {
         return rowPosition;

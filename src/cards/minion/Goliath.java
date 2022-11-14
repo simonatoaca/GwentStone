@@ -10,6 +10,7 @@ public class Goliath extends MinionCard {
 
     public Goliath(Card card) {
         super(card);
+        isTank = true;
     }
 
     public RowPositionForCard getRowPosition() {

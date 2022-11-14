@@ -62,8 +62,6 @@ public class Player {
     public void addManaForNewRound() {
         if (numberOfGamesPlayed <= 10) {
             mana += numberOfGamesPlayed;
-            System.out.println("MANA ADDED: " + numberOfGamesPlayed);
-            System.out.println("NEW MANA: " + mana);
         }
     }
 
@@ -73,8 +71,6 @@ public class Player {
 
     public void subtractMana(int manaSubtracted) {
         mana -= manaSubtracted;
-        System.out.println("MANA SUBTRACTED: " + manaSubtracted);
-        System.out.println("NEW MANA: " + mana);
     }
 
     public void setHeroCard(CardInput card) {

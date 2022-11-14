@@ -61,4 +61,26 @@ public class GameTable {
             }
         }
     }
+
+    public void cardsOfPlayerCanAttackAgain(PlayerTurn playerTurn) {
+        for (int col = 0; col < 5; col++) {
+            if (playerTurn == PlayerTurn.PLAYER1) {
+                if (table[2][col] != null) table[2][col].hasRighToAttackAgain();
+                if (table[3][col] != null) table[3][col].hasRighToAttackAgain();
+            } else {
+                if (table[0][col] != null) table[0][col].hasRighToAttackAgain();
+                if (table[1][col] != null) table[1][col].hasRighToAttackAgain();
+            }
+        }
+    }
+
+    public boolean attackedPlayerHasTankCard(int attackerRow) {
+        // Look at the enemy front row
+        int enemyFrontRow = (attackerRow == 2 || attackerRow == 3) ? 1 : 2;
+        for (int col = 0; col < cardsOnRow[enemyFrontRow]; col++) {
+            if (table[enemyFrontRow][col].isTank())
+                return true;
+        }
+        return false;
+    }
 }
