@@ -2,15 +2,18 @@ package cards.hero;
 
 import cards.Card;
 import cards.CardType;
+import cards.minion.MinionCard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.CardInput;
+import game.GameTable;
 
 import java.util.ArrayList;
 
 public class HeroCard extends Card {
 
+    protected boolean hasAttacked = false;
     protected final CardType type = CardType.HERO;
 
     public HeroCard(Card card) {
@@ -19,6 +22,18 @@ public class HeroCard extends Card {
         colors = card.getColors();
         name = card.getName();
         health = 30;
+    }
+
+    public void useAbility(MinionCard attackedCard) {}
+    public void useAbilityOnRow(GameTable table, int affectedRow) {
+        for (int position = 0; position < 5; position++) {
+            MinionCard attackedCard = table.getCardFrom(affectedRow, position);
+            if (attackedCard != null) {
+                useAbility(attackedCard);
+            }
+        }
+
+        hasJustAttacked();
     }
 
     public ObjectNode getCardPrint() {
@@ -41,6 +56,18 @@ public class HeroCard extends Card {
 
     public CardType getType() {
         return type;
+    }
+
+    public void hasJustAttacked() {
+        hasAttacked = true;
+    }
+
+    public void hasRighToAttackAgain() {
+        hasAttacked = false;
+    }
+
+    public boolean canAttack() {
+        return !hasAttacked;
     }
 
     @Override

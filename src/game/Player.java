@@ -41,6 +41,15 @@ public class Player {
         }
     }
 
+    public void reset() {
+        mana = 0;
+        currentDeck = null;
+        heroCard = null;
+        if (cardsInHand != null) {
+            cardsInHand.clear();
+        }
+    }
+
     public void addCardToHand() {
         if (cardsInHand == null)
             cardsInHand = new ArrayList<>();
@@ -63,6 +72,10 @@ public class Player {
         if (numberOfGamesPlayed <= 10) {
             mana += numberOfGamesPlayed;
         }
+    }
+
+    public void incrementWins() {
+        numberOfWins++;
     }
 
     public void addMana(int manaAdded) {

@@ -18,12 +18,10 @@ public class GameTable {
 
     public void addToRow(int numberOfRow, MinionCard newCard) {
         table[numberOfRow][cardsOnRow[numberOfRow]] = newCard;
-        System.out.println("PUT " + newCard + "at coords " + numberOfRow + " " + cardsOnRow[numberOfRow]);
         cardsOnRow[numberOfRow]++;
     }
 
     public MinionCard deleteFromRow(int numberOfRow, int indexOfCard) {
-        System.out.println("DELETE\n" + table[numberOfRow][indexOfCard]);
         MinionCard card = table[numberOfRow][indexOfCard];
         for (int position = indexOfCard; position < cardsOnRow[numberOfRow] - 1; position++) {
             table[numberOfRow][position] = table[numberOfRow][position + 1];

@@ -18,7 +18,8 @@ import java.util.Objects;
 
 public class Game {
     static private Game gameInstance;
-    private int totalGamesPlayed = 0;
+    private int totalRoundsPlayed;
+    private int totalGamesPlayed;
     private static Player player1;
     private static Player player2;
     private static GameTable table;
@@ -26,27 +27,34 @@ public class Game {
     private static ArrayNode output;
     static private PlayerTurn currentTurn;
 
-    private static boolean gameEnd = false;
+    private static boolean gameEnd;
 
     private Game(Input inputData, ArrayNode output) {
         player1 = new Player();
         player2 = new Player();
-        table = new GameTable();
         this.inputData = inputData;
         Game.output = output;
         gameEnd = false;
+        totalGamesPlayed = 0;
     }
 
     /**
      * Loads the game state described in inputData into gameInstance
      */
     private void load() {
-        totalGamesPlayed = 0;
+        totalRoundsPlayed = 0;
         player1.loadDecks(inputData.getPlayerOneDecks());
         player2.loadDecks(inputData.getPlayerTwoDecks());
     }
 
     private void setRoundInfo(StartGameInput inputData) {
+        player1.reset();
+        player2.reset();
+
+        table = new GameTable();
+        totalRoundsPlayed = 0;
+        gameEnd = false;
+
         player1.setCurrentDeck(inputData.getPlayerOneDeckIdx(), inputData.getShuffleSeed());
         player2.setCurrentDeck(inputData.getPlayerTwoDeckIdx(), inputData.getShuffleSeed());
 
@@ -62,7 +70,6 @@ public class Game {
     }
 
     static public void startGame(Input inputData, ArrayNode output) {
-        System.out.println("--------STARTED GAME-----------\n------------------");
         // Created new instance so the game is new
         gameInstance = new Game(inputData, output);
 
@@ -72,6 +79,7 @@ public class Game {
         // Get through each round
         for (GameInput gameInput : inputData.getGames()) {
             gameInstance.setRoundInfo(gameInput.getStartGame());
+            gameInstance.totalGamesPlayed++;
 
             Iterator<ActionsInput> actions = gameInput.getActions().iterator();
 
@@ -79,13 +87,12 @@ public class Game {
             int turnNumber = 0;
 
             while (actions.hasNext()) {
-                System.out.println("PLAYER INDEX: " + currentTurn);
                 if (turnNumber % 2 == 0) {
                     player1.addCardToHand();
                     player2.addCardToHand();
 
                     // Update mana
-                    Player.setNumberOfGamesPlayed(++gameInstance.totalGamesPlayed);
+                    Player.setNumberOfGamesPlayed(++gameInstance.totalRoundsPlayed);
                     player1.addManaForNewRound();
                     player2.addManaForNewRound();
                 }
@@ -105,6 +112,7 @@ public class Game {
             if (Objects.equals(currentAction.getCommand(), "endPlayerTurn")) {
                 table.unfreezeCardsOfPlayer(currentTurn);
                 table.cardsOfPlayerCanAttackAgain(currentTurn);
+                currentPlayer.getHeroCard().hasRighToAttackAgain();
 
                 // Switch turn
                 currentTurn = (currentTurn == PlayerTurn.PLAYER1) ? PlayerTurn.PLAYER2 : PlayerTurn.PLAYER1;
@@ -114,7 +122,6 @@ public class Game {
             // action handler
             actionHandler(currentAction);
         } while (actions.hasNext());
-        System.out.println("-------END TURN--------");
     }
 
     static public void actionHandler(ActionsInput currentAction) {
@@ -133,10 +140,58 @@ public class Game {
             case "cardUsesAttack" -> cardUsesAttack(currentAction);
             case "cardUsesAbility" -> cardUsesAbility(currentAction);
             case "useAttackHero" -> useAttackHero(currentAction);
+            case "useHeroAbility" -> useHeroAbility(currentAction);
             case "getTotalGamesPlayed" -> getTotalGamesPlayed();
-            case "getPlayerOneWins" -> getPLayerOneWins();
-            case "getPlayerTwoWins" -> getPLayerTwoWins();
+            case "getPlayerOneWins" -> getPlayerOneWins();
+            case "getPlayerTwoWins" -> getPlayerTwoWins();
         }
+    }
+
+    static public void useHeroAbility(ActionsInput currentAction) {
+        if (gameEnd) return;
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode objectNode = objectMapper.createObjectNode();
+
+        objectNode.put("command", "useHeroAbility");
+        objectNode.put("affectedRow", currentAction.getAffectedRow());
+
+        Player player = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
+        HeroCard heroCard = player.getHeroCard();
+
+        if (player.getMana() < heroCard.getMana()) {
+            objectNode.put("error", "Not enough mana to use hero's ability.");
+            output.add(objectNode);
+            return;
+        }
+
+        if (!heroCard.canAttack()) {
+            objectNode.put("error", "Hero has already attacked this turn.");
+            output.add(objectNode);
+            return;
+        }
+
+        int affectedRow = currentAction.getAffectedRow();
+
+        if (Objects.equals(heroCard.getName(), "Lord Royce") ||
+                Objects.equals(heroCard.getName(), "Empress Thorina")) {
+            if ((currentTurn == PlayerTurn.PLAYER1 && affectedRow > 1) ||
+                    ((currentTurn == PlayerTurn.PLAYER2 && affectedRow < 2))) {
+                objectNode.put("error", "Selected row does not belong to the enemy.");
+                output.add(objectNode);
+                return;
+            }
+        } else {
+            if ((currentTurn == PlayerTurn.PLAYER1 && affectedRow < 2) ||
+                    ((currentTurn == PlayerTurn.PLAYER2 && affectedRow > 1))) {
+                objectNode.put("error", "Selected row does not belong to the current player.");
+                output.add(objectNode);
+                return;
+            }
+        }
+
+        heroCard.useAbilityOnRow(table, affectedRow);
+        player.subtractMana(heroCard.getMana());
     }
 
     static public void useAttackHero(ActionsInput currentAction) {
@@ -146,11 +201,6 @@ public class Game {
         Player attackedPlayer = (cardAttackerCoords.getX() < 2) ? player1 : player2;
 
         HeroCard heroAttacked = attackedPlayer.getHeroCard();
-
-        System.out.println("-------------ATTACK HERO-------------");
-        System.out.println(cardAttacker);
-        System.out.println(heroAttacked);
-
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -190,6 +240,8 @@ public class Game {
             objectNode2.put("gameEnded", message);
             output.add(objectNode2);
             gameEnd = true;
+            Player winner = (cardAttackerCoords.getX() < 2) ? player2 : player1;
+            winner.incrementWins();
         }
     }
 
@@ -199,11 +251,6 @@ public class Game {
         Coordinates cardAttackedCoords = currentAction.getCardAttacked();
         MinionCard cardAttacker = table.getCardFrom(cardAttackerCoords.getX(), cardAttackerCoords.getY());
         MinionCard cardAttacked = table.getCardFrom(cardAttackedCoords.getX(), cardAttackedCoords.getY());
-
-        System.out.println("-------------ABILITY-------------");
-        System.out.println(cardAttacker);
-        System.out.println(cardAttacked);
-
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -254,7 +301,6 @@ public class Game {
         }
 
         if (cardAttacked == null) {
-            System.out.println("card attacked is null");
             return;
         }
 
@@ -267,11 +313,6 @@ public class Game {
         Coordinates cardAttackedCoords = currentAction.getCardAttacked();
         MinionCard cardAttacker = table.getCardFrom(cardAttackerCoords.getX(), cardAttackerCoords.getY());
         MinionCard cardAttacked = table.getCardFrom(cardAttackedCoords.getX(), cardAttackedCoords.getY());
-
-        System.out.println("-------------ATTACK-------------");
-        System.out.println(cardAttacker);
-        System.out.println(cardAttacked);
-
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -315,7 +356,6 @@ public class Game {
         }
 
         if (cardAttacked == null) {
-            System.out.println("card attacked is null");
             return;
         }
 
@@ -341,6 +381,7 @@ public class Game {
         objectNode.set("output", cards);
         output.add(objectNode);
     }
+
     static public void useEnvironmentCard(ActionsInput currentAction) {
         if (gameEnd) return;
         ObjectMapper objectMapper = new ObjectMapper();
@@ -355,7 +396,7 @@ public class Game {
 
         Player player = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
         Card cardInHand = player.getCardsInHand().get(handIdx);
-        System.out.println("USE ENVIRONMENT CARD" +  cardInHand);
+
         if (cardInHand.getType() != CardType.ENVIRONMENT) {
             objectNode.put("error", "Chosen card is not of type environment.");
             output.add(objectNode);
@@ -390,11 +431,12 @@ public class Game {
             }
         }
 
-        ((EnvironmentCard)cardInHand).useAbilityOnRow(affectedRow, table);
+        ((EnvironmentCard) cardInHand).useAbilityOnRow(affectedRow, table);
 
         player.subtractMana(cardInHand.getMana());
         player.getCardsInHand().remove(handIdx);
     }
+
     static public void getCardAtPosition(ActionsInput currentAction) {
         int x = currentAction.getX();
         int y = currentAction.getY();
@@ -404,7 +446,7 @@ public class Game {
 
         int playerIdx = currentAction.getPlayerIdx();
         objectNode.put("command", "getCardAtPosition");
-        MinionCard card = table.getCardFrom(x,y);
+        MinionCard card = table.getCardFrom(x, y);
         if (card != null)
             objectNode.set("output", card.getCardPrint());
         else
@@ -515,8 +557,7 @@ public class Game {
         }
 
         int rowForCard;
-        System.out.println(((MinionCard)card).getRowPosition());
-        if (((MinionCard)card).getRowPosition() == RowPositionForCard.FRONT) {
+        if (((MinionCard) card).getRowPosition() == RowPositionForCard.FRONT) {
             rowForCard = (currentTurn == PlayerTurn.PLAYER1) ? 2 : 1;
         } else {
             rowForCard = (currentTurn == PlayerTurn.PLAYER1) ? 3 : 0;
@@ -590,21 +631,21 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getPLayerOneWins() {
+    static public void getPlayerOneWins() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
-        objectNode.put("command", "getPLayerOneWins");
+        objectNode.put("command", "getPlayerOneWins");
         objectNode.put("output", player1.getNumberOfWins());
 
         output.add(objectNode);
     }
 
-    static public void getPLayerTwoWins() {
+    static public void getPlayerTwoWins() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
-        objectNode.put("command", "getPLayerTwoWins");
+        objectNode.put("command", "getPlayerTwoWins");
         objectNode.put("output", player2.getNumberOfWins());
 
         output.add(objectNode);

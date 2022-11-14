@@ -136,6 +136,14 @@ public class Card {
         health += addedHealth;
     }
 
+    public void addAttackDamage(int attackDamageAdded) {
+        attackDamage += attackDamageAdded;
+    }
+
+    public void subtractAttackDamage(int attackDamageSubtracted) {
+        attackDamage -= attackDamageSubtracted;
+    }
+
     public void subtractHealth(int subtractedHealth) {
         health -= subtractedHealth;
     }
