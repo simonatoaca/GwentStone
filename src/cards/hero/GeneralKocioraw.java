@@ -8,6 +8,10 @@ public class GeneralKocioraw extends HeroCard {
         super(card);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void useAbility(MinionCard card) {
         card.addAttackDamage(1);
     }

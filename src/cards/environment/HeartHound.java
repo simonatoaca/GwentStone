@@ -8,24 +8,13 @@ import game.GameTable;
 import java.util.ArrayList;
 
 public class HeartHound extends EnvironmentCard {
-    private int mana;
-    private String description;
-    private ArrayList<String> colors;
-    private String name;
-    private final CardType type = CardType.ENVIRONMENT;
     public HeartHound(Card card) {
         super(card);
-        mana = card.getMana();
-        description = card.getDescription();
-        colors = card.getColors();
-        name = card.getName();
     }
 
-    @Override
-    public CardType getType() {
-        return type;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void useAbilityOnRow(int row, GameTable table) {
         int maxHealth = 0;
@@ -52,15 +41,5 @@ public class HeartHound extends EnvironmentCard {
 
         MinionCard maxHealthCard = table.deleteFromRow(row, maxHealthPosition);
         table.addToRow(newRow, maxHealthCard);
-    }
-
-    @Override
-    public int getMana() {
-        return mana;
-    }
-
-    @Override
-    public String getName() {
-        return name;
     }
 }

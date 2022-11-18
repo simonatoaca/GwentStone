@@ -13,19 +13,19 @@ import java.nio.charset.MalformedInputException;
 import java.util.ArrayList;
 
 public class EnvironmentCard extends Card {
-    private int mana;
-    private final String description;
-    private final ArrayList<String> colors;
-    private final String name;
-    private final CardType type = CardType.ENVIRONMENT;
 
     public EnvironmentCard(Card card) {
         mana = card.getMana();
         description = card.getDescription();
         colors = card.getColors();
         name = card.getName();
+        type = CardType.ENVIRONMENT;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ObjectNode getCardPrint() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -43,11 +43,17 @@ public class EnvironmentCard extends Card {
         return objectNode;
     }
 
-    public CardType getType() {
-        return type;
-    }
-
+    /**
+     * The current card uses its ability on the card specified
+     * @param attackedCard
+     */
     public void useAbility(MinionCard attackedCard) {}
+
+    /**
+     * The card uses its ability on the row specified
+     * @param row
+     * @param table
+     */
     public void useAbilityOnRow(int row, GameTable table) {
         for (int position = 0; position < 5; position++) {
             MinionCard attackedCard = table.getCardFrom(row, position);
@@ -56,22 +62,5 @@ public class EnvironmentCard extends Card {
             }
         }
         table.checkForZeroHealth(row);
-    }
-
-    @Override
-    public String toString() {
-        return "{\n"
-                +  "mana="
-                + mana
-                +  ",\n description='"
-                + description
-                + '\''
-                + ",\n colors="
-                + colors
-                + ",\n name='"
-                +  "\n"
-                + name
-                + '\''
-                + '}';
     }
 }

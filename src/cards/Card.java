@@ -18,10 +18,9 @@ public class Card {
     protected String description;
     protected ArrayList<String> colors;
     protected String name;
+    protected CardType type;
 
-    private CardType type;
-
-    public Card() {};
+    public Card() { };
 
     public Card(CardInput card) {
         mana = card.getMana();
@@ -41,7 +40,12 @@ public class Card {
         name = card.getName();
     }
 
-    static public Card getCardByType(Card card) {
+    /**
+     * Instantiates a new card depending on its type
+     * @param card
+     * @return - a subclass of Card
+     */
+    public static Card getCardByType(Card card) {
         switch (card.name) {
             case "Sentinel" -> {
                 return new Sentinel(card);
@@ -92,27 +96,10 @@ public class Card {
         return null;
     }
 
-    @Override
-    public String toString() {
-        return "{\n"
-                +  "mana="
-                + mana
-                +  ",\n attackDamage="
-                + attackDamage
-                + ",\n health="
-                + health
-                +  ",\n description='"
-                + description
-                + '\''
-                + ",\n colors="
-                + colors
-                + ",\n name='"
-                +  "\n"
-                + name
-                + '\''
-                + '}';
-    }
-
+    /**
+     * Builds the format of the card for Json output
+     * @return - the ObjectNode containing the card print
+     */
     public ObjectNode getCardPrint() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -132,70 +119,140 @@ public class Card {
         return objectNode;
     }
 
+    /**
+     * Increases the health of the currrent card
+     * @param addedHealth
+     */
     public void addHealth(int addedHealth) {
         health += addedHealth;
     }
 
+    /**
+     * Increases the attackDamage of the currrent card
+     * @param attackDamageAdded
+     */
     public void addAttackDamage(int attackDamageAdded) {
         attackDamage += attackDamageAdded;
     }
 
-    public void subtractAttackDamage(int attackDamageSubtracted) {
-        attackDamage -= attackDamageSubtracted;
+    /**
+     * Decreases the attackDamage of the current card
+     * @param attackDamageSubtracted
+     */
+    public void subtractAttackDamage(int subtractedAttackDamage) {
+        attackDamage -= subtractedAttackDamage;
+        if (attackDamage < 0)
+            attackDamage = 0;
     }
 
+    /**
+     * Decreases the health of the current card
+     * @param subtractedHealth
+     */
     public void subtractHealth(int subtractedHealth) {
         health -= subtractedHealth;
     }
 
+    /**
+     * Get this card's mana
+     * @return
+     */
     public int getMana() {
         return mana;
     }
 
+    /**
+     * Set this card's mana
+     * @param mana
+     */
     public void setMana(final int mana) {
         this.mana = mana;
     }
 
+    /**
+     * Get the attackDamage of this card
+     * @return
+     */
     public int getAttackDamage() {
         return attackDamage;
     }
 
+    /**
+     * Set the attackDamage of this card
+     * @param attackDamage
+     */
     public void setAttackDamage(final int attackDamage) {
         this.attackDamage = attackDamage;
     }
 
+    /**
+     * Get the health of this card
+     * @return
+     */
     public int getHealth() {
         return health;
     }
 
+    /**
+     * Set the health of this card
+     * @param health
+     */
     public void setHealth(final int health) {
         this.health = health;
     }
 
+    /**
+     * Get the description of the current card
+     * @return
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Set the description of the current card
+     * @param description
+     */
     public void setDescription(final String description) {
         this.description = description;
     }
 
+    /**
+     * Get the colors of the current card
+     * @return
+     */
     public ArrayList<String> getColors() {
         return colors;
     }
 
+    /**
+     * Set the colors of the current card
+     * @param colors
+     */
     public void setColors(final ArrayList<String> colors) {
         this.colors = colors;
     }
 
+    /**
+     * Get the name of the current card
+     * @return
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Set the name of the current card
+     * @param name
+     */
     public void setName(final String name) {
         this.name = name;
     }
 
+    /**
+     * Get the type of the current card
+     * @return - the type (MINION, HERO, ENVIRONMENT)
+     */
     public CardType getType() {
         return type;
     }

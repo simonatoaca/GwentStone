@@ -1,15 +1,17 @@
 package cards;
 
 import fileio.CardInput;
-import fileio.DecksInput;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class Deck {
+public final class Deck {
     private final int nrCardsInDeck;
     private final List<Card> cards;
 
+    /**
+     * Creates new deck from array of CardInput
+     * @param deck
+     */
     public Deck(ArrayList<CardInput> deck) {
         nrCardsInDeck = deck.size();
         cards = new ArrayList<>();
@@ -18,6 +20,10 @@ public class Deck {
         }
     }
 
+    /**
+     * Deep copies a deck
+     * @param deck
+     */
     public Deck(Deck deck) {
         nrCardsInDeck = deck.nrCardsInDeck;
         cards = new ArrayList<>();
@@ -26,14 +32,11 @@ public class Deck {
         }
     }
 
+    /**
+     * Gets the cards in the current deck
+     * @return - list of cards
+     */
     public List<Card> getCards() {
         return cards;
-    }
-
-    @Override
-    public String toString() {
-        return "{\n"
-                + cards
-                + '}';
     }
 }

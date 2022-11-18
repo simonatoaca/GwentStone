@@ -6,22 +6,16 @@ import cards.RowPositionForCard;
 import game.GameTable;
 
 public class TheCursedOne extends MinionCard {
-    private final RowPositionForCard rowPosition = RowPositionForCard.BACK;
-    private final boolean hasSpecialAbility = true;
-    private final CardType type = CardType.MINION;
     public TheCursedOne(Card card) {
         super(card);
+        rowPosition = RowPositionForCard.BACK;
+        hasSpecialAbility = true;
     }
 
-    public RowPositionForCard getRowPosition() {
-        return rowPosition;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public CardType getType() {
-        return type;
-    }
-
     public void useAbility(MinionCard card, GameTable table, int row) {
         int cardHealth = card.getHealth();
         card.setHealth(card.getAttackDamage());

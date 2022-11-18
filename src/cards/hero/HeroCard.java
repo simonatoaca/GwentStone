@@ -12,9 +12,7 @@ import game.GameTable;
 import java.util.ArrayList;
 
 public class HeroCard extends Card {
-
-    protected boolean hasAttacked = false;
-    protected final CardType type = CardType.HERO;
+    protected boolean hasAttacked;
 
     public HeroCard(Card card) {
         mana = card.getMana();
@@ -22,9 +20,20 @@ public class HeroCard extends Card {
         colors = card.getColors();
         name = card.getName();
         health = 30;
+        hasAttacked = false;
+        type = CardType.HERO;
     }
 
-    public void useAbility(MinionCard attackedCard) {}
+    /**
+     * {@inheritDoc}
+     */
+    public void useAbility(MinionCard attackedCard) { }
+
+    /**
+     * The hero card uses its ability on the row specified
+     * @param table
+     * @param affectedRow
+     */
     public void useAbilityOnRow(GameTable table, int affectedRow) {
         for (int position = 0; position < 5; position++) {
             MinionCard attackedCard = table.getCardFrom(affectedRow, position);
@@ -36,6 +45,10 @@ public class HeroCard extends Card {
         hasJustAttacked();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ObjectNode getCardPrint() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -54,38 +67,26 @@ public class HeroCard extends Card {
         return objectNode;
     }
 
-    public CardType getType() {
-        return type;
-    }
-
+    /**
+     * Sets the hasAttacked field to true if the card has attacked
+     * the current turn
+     */
     public void hasJustAttacked() {
         hasAttacked = true;
     }
 
+    /**
+     * After the round is over, the card has the right to attack again
+     */
     public void hasRighToAttackAgain() {
         hasAttacked = false;
     }
 
+    /**
+     * Returns whether the card can attack or not
+     * @return - true if the card can attack, false otherwise
+     */
     public boolean canAttack() {
         return !hasAttacked;
-    }
-
-    @Override
-    public String toString() {
-        return "{\n"
-                +  "mana="
-                + mana
-                + ",\n health="
-                + health
-                +  ",\n description='"
-                + description
-                + '\''
-                + ",\n colors="
-                + colors
-                + ",\n name='"
-                +  "\n"
-                + name
-                + '\''
-                + '}';
     }
 }

@@ -3,34 +3,25 @@ package game;
 import cards.Card;
 import cards.Deck;
 import cards.hero.HeroCard;
-import cards.minion.MinionCard;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import fileio.ActionsInput;
 import fileio.CardInput;
 import fileio.DecksInput;
-
-import java.io.IOException;
 import java.util.*;
 
-public class Player {
+public final class Player {
     private int numberOfWins = 0;
-    static private int numberOfGamesPlayed = 0;
+    private static int numberOfGamesPlayed = 0;
     private int mana = 0;
-
     private ArrayList<Deck> decks;
     private Deck currentDeck;
     private ArrayList<Card> cardsInHand;
     private HeroCard heroCard;
 
+    /**
+     * Loads the decks given in the input to this player
+     * @param inputDecks
+     */
     public void loadDecks(DecksInput inputDecks) {
-        if (decks == null) {
-            decks = new ArrayList<>();
-        } else {
-            decks.clear();
-        }
+        decks = new ArrayList<>();
 
         for (ArrayList<CardInput> cards : inputDecks.getDecks()) {
             decks.add(new Deck(cards));
@@ -41,6 +32,10 @@ public class Player {
         }
     }
 
+    /**
+     * Resets the player status before the beginning of a new game.
+     * The decks loaded at the very start stay the same
+     */
     public void reset() {
         mana = 0;
         currentDeck = null;
@@ -50,6 +45,10 @@ public class Player {
         }
     }
 
+    /**
+     * Adds the first card available in the current deck of
+     * the player to its hand, removing it from the deck
+     */
     public void addCardToHand() {
         if (cardsInHand == null)
             cardsInHand = new ArrayList<>();
@@ -60,6 +59,12 @@ public class Player {
         }
     }
 
+    /**
+     * Loads the player's current deck using deep copy
+     * so the changes don't reflect in the initial decks
+     * @param numberOfDeck
+     * @param shuffleSeed
+     */
     public void setCurrentDeck(int numberOfDeck, int shuffleSeed) {
         // Deep copy so the modifications don t affect the original decks
         currentDeck = new Deck(decks.get(numberOfDeck));
@@ -68,20 +73,28 @@ public class Player {
         Collections.shuffle(currentDeck.getCards(), new Random(shuffleSeed));
     }
 
+    /**
+     * Adds mana to this player at the start of a new round,
+     * if the number of rounds already played is under 10
+     */
     public void addManaForNewRound() {
         if (numberOfGamesPlayed <= 10) {
             mana += numberOfGamesPlayed;
         }
     }
 
+    /**
+     * Used when a player wins to increment the number of wins
+     */
     public void incrementWins() {
         numberOfWins++;
     }
 
-    public void addMana(int manaAdded) {
-        mana += manaAdded;
-    }
-
+    /**
+     * Subtract mana from this player.
+     * Used after the player uses a card
+     * @param manaSubtracted
+     */
     public void subtractMana(int manaSubtracted) {
         mana -= manaSubtracted;
     }
@@ -106,10 +119,6 @@ public class Player {
         return heroCard;
     }
 
-    public static int getNumberOfGamesPlayed() {
-        return numberOfGamesPlayed;
-    }
-
     public int getNumberOfWins() {
         return numberOfWins;
     }
@@ -122,20 +131,8 @@ public class Player {
         this.mana = mana;
     }
 
-    public void setNumberOfWins(int numberOfWins) {
-        this.numberOfWins = numberOfWins;
-    }
-
     public static void setNumberOfGamesPlayed(int numberOfGamesPlayed) {
         Player.numberOfGamesPlayed = numberOfGamesPlayed;
-    }
-
-    public void setCardsInHand(ArrayList<Card> cardsInHand) {
-        this.cardsInHand = cardsInHand;
-    }
-
-    public void setCurrentDeck(Deck currentDeck) {
-        this.currentDeck = currentDeck;
     }
 
     public void setDecks(ArrayList<Deck> decks) {

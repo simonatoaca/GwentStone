@@ -6,21 +6,15 @@ import cards.RowPositionForCard;
 import game.GameTable;
 
 public class Disciple extends MinionCard {
-    private final RowPositionForCard rowPosition = RowPositionForCard.BACK;
-    private final CardType type = CardType.MINION;
     public Disciple(Card card) {
         super(card);
+        rowPosition = RowPositionForCard.BACK;
     }
 
-    public RowPositionForCard getRowPosition() {
-        return rowPosition;
-    }
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public CardType getType() {
-        return type;
-    }
-
     public void useAbility(MinionCard card, GameTable table, int row) {
         card.addHealth(2);
 

@@ -10,14 +10,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fileio.*;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
 
 public class Game {
-    static private Game gameInstance;
+    private static Game gameInstance;
     private int totalRoundsPlayed;
     private int totalGamesPlayed;
     private static Player player1;
@@ -25,8 +24,7 @@ public class Game {
     private static GameTable table;
     private final Input inputData;
     private static ArrayNode output;
-    static private PlayerTurn currentTurn;
-
+    private static PlayerTurn currentTurn;
     private static boolean gameEnd;
 
     private Game(Input inputData, ArrayNode output) {
@@ -47,6 +45,11 @@ public class Game {
         player2.loadDecks(inputData.getPlayerTwoDecks());
     }
 
+    /**
+     * Clears info from the previous game and loads the player's current decks and
+     * heroes, and sets which player has the first turn
+     * @param inputData
+     */
     private void setRoundInfo(StartGameInput inputData) {
         player1.reset();
         player2.reset();
@@ -69,7 +72,13 @@ public class Game {
         }
     }
 
-    static public void startGame(Input inputData, ArrayNode output) {
+    /**
+     * The entry point for the game
+     * Handles loading the game and going through the game's rounds (stored in GameInput)
+     * @param inputData
+     * @param output
+     */
+    public static void startGame(Input inputData, ArrayNode output) {
         // Created new instance so the game is new
         gameInstance = new Game(inputData, output);
 
@@ -91,8 +100,9 @@ public class Game {
                     player1.addCardToHand();
                     player2.addCardToHand();
 
-                    // Update mana
                     Player.setNumberOfGamesPlayed(++gameInstance.totalRoundsPlayed);
+
+                    // Update mana
                     player1.addManaForNewRound();
                     player2.addManaForNewRound();
                 }
@@ -102,6 +112,11 @@ public class Game {
         }
     }
 
+    /**
+     * Handles the actions during a player's turn
+     * When "endPlayerTurn" is encountered, it is time for the other player's turn
+     * @param actions - the actions in the round, starting where the last turn ended
+     */
     public static void playTurn(Iterator<ActionsInput> actions) {
         Player currentPlayer = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
 
@@ -124,7 +139,11 @@ public class Game {
         } while (actions.hasNext());
     }
 
-    static public void actionHandler(ActionsInput currentAction) {
+    /**
+     * Takes the appropiate action depending on the currentAction
+     * @param currentAction - the action to be handled
+     */
+    public static void actionHandler(ActionsInput currentAction) {
         switch (currentAction.getCommand()) {
             case "getPlayerDeck" -> getPlayerDeck(currentAction);
             case "getPlayerTurn" -> getPlayerTurn();
@@ -147,8 +166,14 @@ public class Game {
         }
     }
 
-    static public void useHeroAbility(ActionsInput currentAction) {
-        if (gameEnd) return;
+    /**
+     *  The hero of the current player uses its ability on the row of cards
+     *  specified in currentAction
+     *  Errors are printed to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void useHeroAbility(ActionsInput currentAction) {
+        if (gameEnd) { return; }
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -194,7 +219,13 @@ public class Game {
         player.subtractMana(heroCard.getMana());
     }
 
-    static public void useAttackHero(ActionsInput currentAction) {
+    /**
+     * The hero of the player specified in currentAction is attacked
+     * by one of the opponent's cards, also specified in currentAction
+     * Errors are printed to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void useAttackHero(ActionsInput currentAction) {
         if (gameEnd) return;
         Coordinates cardAttackerCoords = currentAction.getCardAttacker();
         MinionCard cardAttacker = table.getCardFrom(cardAttackerCoords.getX(), cardAttackerCoords.getY());
@@ -245,7 +276,12 @@ public class Game {
         }
     }
 
-    static public void cardUsesAbility(ActionsInput currentAction) {
+    /**
+     * The specified card uses its ability on another card (also specified)
+     * Errors are printed to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void cardUsesAbility(ActionsInput currentAction) {
         if (gameEnd) return;
         Coordinates cardAttackerCoords = currentAction.getCardAttacker();
         Coordinates cardAttackedCoords = currentAction.getCardAttacked();
@@ -307,7 +343,12 @@ public class Game {
         cardAttacker.useAbility(cardAttacked, table, cardAttackedCoords.getX());
     }
 
-    static public void cardUsesAttack(ActionsInput currentAction) {
+    /**
+     * The specified card attacks another card (also specified)
+     * Errors are printed to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void cardUsesAttack(ActionsInput currentAction) {
         if (gameEnd) return;
         Coordinates cardAttackerCoords = currentAction.getCardAttacker();
         Coordinates cardAttackedCoords = currentAction.getCardAttacked();
@@ -362,7 +403,11 @@ public class Game {
         cardAttacker.useAttack(cardAttacked, table, cardAttackedCoords.getX());
     }
 
-    static public void getFrozenCardsOnTable(ActionsInput currentAction) {
+    /**
+     * Prints to output the frozen cards on the table
+     * @param currentAction - the action that triggered this response
+     */
+    public static void getFrozenCardsOnTable(ActionsInput currentAction) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -382,7 +427,12 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void useEnvironmentCard(ActionsInput currentAction) {
+    /**
+     * The current player uses the environment card at handIdx on the specified row
+     * Errors are printed to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void useEnvironmentCard(ActionsInput currentAction) {
         if (gameEnd) return;
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
@@ -437,7 +487,12 @@ public class Game {
         player.getCardsInHand().remove(handIdx);
     }
 
-    static public void getCardAtPosition(ActionsInput currentAction) {
+    /**
+     * Prints to output the card found on the table at the specified position
+     * Prints error if no card is found
+     * @param currentAction - the action that triggered this response
+     */
+    public static void getCardAtPosition(ActionsInput currentAction) {
         int x = currentAction.getX();
         int y = currentAction.getY();
 
@@ -455,7 +510,11 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getEnvironmentCardsInHand(ActionsInput currentAction) {
+    /**
+     * Prints to output the environment cards that the player specified has in hand
+     * @param currentAction - the action that triggered this response
+     */
+    public static void getEnvironmentCardsInHand(ActionsInput currentAction) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -473,7 +532,11 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getPlayerMana(ActionsInput currentAction) {
+    /**
+     * Prints to output the specified player's mana
+     * @param currentAction - the action that triggered this response
+     */
+    public static void getPlayerMana(ActionsInput currentAction) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -486,7 +549,10 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getCardsOnTable() {
+    /**
+     * Prints to output the cards on the table, from (0, 0) to (4, 5)
+     */
+    public static void getCardsOnTable() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -511,7 +577,11 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getCardsInHand(ActionsInput currentAction) {
+    /**
+     * Prints to output the cards in the specified player's hand
+     * @param currentAction - the action that triggered this response
+     */
+    public static void getCardsInHand(ActionsInput currentAction) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -528,7 +598,13 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void placeCard(ActionsInput currentAction) {
+    /**
+     * Places the specified card on the table, taking into account
+     * its type and who owns it
+     * Error are printed to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void placeCard(ActionsInput currentAction) {
         if (gameEnd) return;
         Player currentPlayer = (currentTurn == PlayerTurn.PLAYER1) ? player1 : player2;
         Card card;
@@ -579,7 +655,11 @@ public class Game {
         currentPlayer.getCardsInHand().remove(currentAction.getHandIdx());
     }
 
-    static public void getPlayerHero(ActionsInput currentAction) {
+    /**
+     * Prints the specified player's hero card to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void getPlayerHero(ActionsInput currentAction) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -594,7 +674,11 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getPlayerDeck(ActionsInput currentAction) {
+    /**
+     * Prints the specified player's current deck to output
+     * @param currentAction - the action that triggered this response
+     */
+    public static void getPlayerDeck(ActionsInput currentAction) {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -611,7 +695,10 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getPlayerTurn() {
+    /**
+     * Prints to output the player who is active this turn
+     */
+    public static  void getPlayerTurn() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -621,7 +708,10 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getTotalGamesPlayed() {
+    /**
+     * Prints to output the total number of rounds played
+     */
+    public static  void getTotalGamesPlayed() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -631,7 +721,7 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getPlayerOneWins() {
+    public static void getPlayerOneWins() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 
@@ -641,7 +731,7 @@ public class Game {
         output.add(objectNode);
     }
 
-    static public void getPlayerTwoWins() {
+    public static void getPlayerTwoWins() {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode objectNode = objectMapper.createObjectNode();
 

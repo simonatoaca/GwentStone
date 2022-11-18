@@ -9,6 +9,10 @@ public class KingMudface extends HeroCard {
         super(card);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void useAbility(MinionCard card) {
         card.addHealth(1);
     }

@@ -5,20 +5,9 @@ import cards.CardType;
 import cards.RowPositionForCard;
 
 public class Goliath extends MinionCard {
-    private final RowPositionForCard rowPosition = RowPositionForCard.FRONT;
-    private final CardType type = CardType.MINION;
-
     public Goliath(Card card) {
         super(card);
+        rowPosition = RowPositionForCard.FRONT;
         isTank = true;
-    }
-
-    public RowPositionForCard getRowPosition() {
-        return rowPosition;
-    }
-
-    @Override
-    public CardType getType() {
-        return type;
     }
 }

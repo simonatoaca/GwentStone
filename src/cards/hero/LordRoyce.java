@@ -9,6 +9,9 @@ public class LordRoyce extends HeroCard {
         super(card);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void useAbilityOnRow(GameTable table, int affectedRow) {
         int maxAttack = 0;
