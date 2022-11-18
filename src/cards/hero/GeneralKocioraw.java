@@ -4,7 +4,7 @@ import cards.Card;
 import cards.minion.MinionCard;
 
 public class GeneralKocioraw extends HeroCard {
-    public GeneralKocioraw(Card card) {
+    public GeneralKocioraw(final Card card) {
         super(card);
     }
 
@@ -12,7 +12,7 @@ public class GeneralKocioraw extends HeroCard {
      * {@inheritDoc}
      */
     @Override
-    public void useAbility(MinionCard card) {
+    public void useAbility(final MinionCard card) {
         card.addAttackDamage(1);
     }
 }

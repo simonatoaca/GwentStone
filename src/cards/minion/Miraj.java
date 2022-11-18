@@ -1,12 +1,11 @@
 package cards.minion;
 
 import cards.Card;
-import cards.CardType;
 import cards.RowPositionForCard;
 import game.GameTable;
 
 public class Miraj extends MinionCard {
-    public Miraj(Card card) {
+    public Miraj(final Card card) {
         super(card);
         hasSpecialAbility = true;
         rowPosition = RowPositionForCard.FRONT;
@@ -15,7 +14,8 @@ public class Miraj extends MinionCard {
     /**
      * {@inheritDoc}
      */
-    public void useAbility(MinionCard card, GameTable table, int row) {
+    public void useAbility(final MinionCard card, final GameTable table,
+                           final int row) {
         int enemyCardHealth = card.getHealth();
         card.setHealth(this.health);
         this.health = enemyCardHealth;

@@ -20,7 +20,7 @@ public final class Player {
      * Loads the decks given in the input to this player
      * @param inputDecks
      */
-    public void loadDecks(DecksInput inputDecks) {
+    public void loadDecks(final DecksInput inputDecks) {
         decks = new ArrayList<>();
 
         for (ArrayList<CardInput> cards : inputDecks.getDecks()) {
@@ -47,11 +47,12 @@ public final class Player {
 
     /**
      * Adds the first card available in the current deck of
-     * the player to its hand, removing it from the deck
+     * the player to its hand, removing it from the deck.
      */
     public void addCardToHand() {
-        if (cardsInHand == null)
+        if (cardsInHand == null) {
             cardsInHand = new ArrayList<>();
+        }
 
         if (currentDeck.getCards().size() != 0) {
             Card newCard = currentDeck.getCards().remove(0);
@@ -61,11 +62,11 @@ public final class Player {
 
     /**
      * Loads the player's current deck using deep copy
-     * so the changes don't reflect in the initial decks
+     * so the changes don't reflect in the initial decks.
      * @param numberOfDeck
      * @param shuffleSeed
      */
-    public void setCurrentDeck(int numberOfDeck, int shuffleSeed) {
+    public void setCurrentDeck(final int numberOfDeck, final int shuffleSeed) {
         // Deep copy so the modifications don t affect the original decks
         currentDeck = new Deck(decks.get(numberOfDeck));
 
@@ -75,7 +76,7 @@ public final class Player {
 
     /**
      * Adds mana to this player at the start of a new round,
-     * if the number of rounds already played is under 10
+     * if the number of rounds already played is under 10.
      */
     public void addManaForNewRound() {
         if (numberOfGamesPlayed <= 10) {
@@ -84,7 +85,7 @@ public final class Player {
     }
 
     /**
-     * Used when a player wins to increment the number of wins
+     * Used when a player wins to increment the number of wins.
      */
     public void incrementWins() {
         numberOfWins++;
@@ -95,11 +96,11 @@ public final class Player {
      * Used after the player uses a card
      * @param manaSubtracted
      */
-    public void subtractMana(int manaSubtracted) {
+    public void subtractMana(final int manaSubtracted) {
         mana -= manaSubtracted;
     }
 
-    public void setHeroCard(CardInput card) {
+    public void setHeroCard(final CardInput card) {
         heroCard = (HeroCard) Card.getCardByType(new Card(card));
     }
 
@@ -127,15 +128,15 @@ public final class Player {
         return decks;
     }
 
-    public void setMana(int mana) {
+    public void setMana(final int mana) {
         this.mana = mana;
     }
 
-    public static void setNumberOfGamesPlayed(int numberOfGamesPlayed) {
+    public static void setNumberOfGamesPlayed(final int numberOfGamesPlayed) {
         Player.numberOfGamesPlayed = numberOfGamesPlayed;
     }
 
-    public void setDecks(ArrayList<Deck> decks) {
+    public void setDecks(final ArrayList<Deck> decks) {
         this.decks = decks;
     }
 }

@@ -1,14 +1,11 @@
 package cards.environment;
 
 import cards.Card;
-import cards.CardType;
 import cards.minion.MinionCard;
-import fileio.CardInput;
 
-import java.util.ArrayList;
 
 public class Firestorm extends EnvironmentCard {
-    public Firestorm(Card card) {
+    public Firestorm(final Card card) {
         super(card);
     }
 
@@ -16,7 +13,7 @@ public class Firestorm extends EnvironmentCard {
      * {@inheritDoc}
      */
     @Override
-    public void useAbility(MinionCard attackedCard) {
+    public void useAbility(final MinionCard attackedCard) {
         attackedCard.setHealth(attackedCard.getHealth() - 1);
     }
 }

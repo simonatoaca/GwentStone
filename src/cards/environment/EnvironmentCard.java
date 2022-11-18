@@ -6,15 +6,11 @@ import cards.minion.MinionCard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import fileio.CardInput;
 import game.GameTable;
-
-import java.nio.charset.MalformedInputException;
-import java.util.ArrayList;
 
 public class EnvironmentCard extends Card {
 
-    public EnvironmentCard(Card card) {
+    public EnvironmentCard(final Card card) {
         mana = card.getMana();
         description = card.getDescription();
         colors = card.getColors();
@@ -47,15 +43,15 @@ public class EnvironmentCard extends Card {
      * The current card uses its ability on the card specified
      * @param attackedCard
      */
-    public void useAbility(MinionCard attackedCard) {}
+    public void useAbility(final MinionCard attackedCard) { }
 
     /**
      * The card uses its ability on the row specified
      * @param row
      * @param table
      */
-    public void useAbilityOnRow(int row, GameTable table) {
-        for (int position = 0; position < 5; position++) {
+    public void useAbilityOnRow(final int row, final GameTable table) {
+        for (int position = 0; position < GameTable.COLUMNS; position++) {
             MinionCard attackedCard = table.getCardFrom(row, position);
             if (attackedCard != null) {
                 useAbility(attackedCard);

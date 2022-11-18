@@ -4,10 +4,6 @@ import cards.Card;
 import cards.CardType;
 import cards.RowPositionForCard;
 import cards.hero.HeroCard;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import fileio.CardInput;
-import fileio.Coordinates;
-import game.Game;
 import game.GameTable;
 import game.PlayerTurn;
 
@@ -22,7 +18,7 @@ public class MinionCard extends Card {
      * Creates a basic minion card, without special abilities.
      * @param card
      */
-    public MinionCard(Card card) {
+    public MinionCard(final Card card) {
         super(card);
         isFrozen = false;
         hasSpecialAbility = false;
@@ -39,7 +35,7 @@ public class MinionCard extends Card {
      * @param table
      * @param row - the row where the attacked card is placed
      */
-    public void useAttack(MinionCard cardAttacked, GameTable table, int row) {
+    public void useAttack(final MinionCard cardAttacked, final GameTable table, final int row) {
         cardAttacked.subtractHealth(this.getAttackDamage());
 
         // Kill card if health is 0
@@ -52,7 +48,7 @@ public class MinionCard extends Card {
      * The current card attacks the hero of the opponent.
      * @param heroAttacked
      */
-    public void useAttackHero(HeroCard heroAttacked) {
+    public void useAttackHero(final HeroCard heroAttacked) {
         heroAttacked.subtractHealth(this.getAttackDamage());
         hasJustAttacked();
     }
@@ -77,7 +73,8 @@ public class MinionCard extends Card {
      * @param table
      * @param attackedCardCoordX
      */
-    public void useAbility(MinionCard card, GameTable table, int attackedCardCoordX) {}
+    public void useAbility(final MinionCard card, final GameTable table,
+                           final int attackedCardCoordX) { }
 
     /**
      * Checks the frozen status of the current card
@@ -107,7 +104,7 @@ public class MinionCard extends Card {
      * {@inheritDoc}
      */
     @Override
-    public void subtractAttackDamage(int subtractedAttackDamage) {
+    public void subtractAttackDamage(final int subtractedAttackDamage) {
        super.subtractAttackDamage(subtractedAttackDamage);
     }
 
@@ -117,8 +114,11 @@ public class MinionCard extends Card {
      * @param attackedCardX
      * @return
      */
-    public static boolean attackedCardBelongsToEnemy(int attackerCardX, int attackedCardX) {
-        PlayerTurn attacker = (attackerCardX == 2 || attackerCardX == 3) ? PlayerTurn.PLAYER1 : PlayerTurn.PLAYER2;
+    public static boolean attackedCardBelongsToEnemy(final int attackerCardX,
+                                                     final int attackedCardX) {
+        PlayerTurn attacker = (attackerCardX == 2 || attackerCardX == 3)
+                ? PlayerTurn.PLAYER1 : PlayerTurn.PLAYER2;
+
         if (attacker == PlayerTurn.PLAYER1) {
             return attackedCardX != 2 && attackedCardX != 3;
         } else {

@@ -1,14 +1,12 @@
 package cards.environment;
 
 import cards.Card;
-import cards.CardType;
 import cards.minion.MinionCard;
 import game.GameTable;
 
-import java.util.ArrayList;
 
 public class HeartHound extends EnvironmentCard {
-    public HeartHound(Card card) {
+    public HeartHound(final Card card) {
         super(card);
     }
 
@@ -16,12 +14,12 @@ public class HeartHound extends EnvironmentCard {
      * {@inheritDoc}
      */
     @Override
-    public void useAbilityOnRow(int row, GameTable table) {
+    public void useAbilityOnRow(final int row, final GameTable table) {
         int maxHealth = 0;
         int maxHealthPosition = 0;
 
         // Get the card with the most health
-        for (int position = 0; position < 5; position++) {
+        for (int position = 0; position < GameTable.COLUMNS; position++) {
             MinionCard attackedCard = table.getCardFrom(row, position);
             if (attackedCard != null) {
                 if (attackedCard.getHealth() > maxHealth) {
@@ -37,6 +35,7 @@ public class HeartHound extends EnvironmentCard {
             case 1: newRow = 2;
             case 2: newRow = 1;
             case 3: newRow = 0;
+            default: newRow = 0;
         }
 
         MinionCard maxHealthCard = table.deleteFromRow(row, maxHealthPosition);

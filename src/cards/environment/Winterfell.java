@@ -1,13 +1,11 @@
 package cards.environment;
 
 import cards.Card;
-import cards.CardType;
 import cards.minion.MinionCard;
 
-import java.util.ArrayList;
 
 public class Winterfell extends EnvironmentCard {
-    public Winterfell(Card card) {
+    public Winterfell(final Card card) {
         super(card);
     }
 
@@ -15,7 +13,7 @@ public class Winterfell extends EnvironmentCard {
      * {@inheritDoc}
      */
     @Override
-    public void useAbility(MinionCard attackedCard) {
+    public void useAbility(final MinionCard attackedCard) {
         attackedCard.freezeCard();
     }
 }

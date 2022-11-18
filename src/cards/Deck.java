@@ -12,7 +12,7 @@ public final class Deck {
      * Creates new deck from array of CardInput
      * @param deck
      */
-    public Deck(ArrayList<CardInput> deck) {
+    public Deck(final ArrayList<CardInput> deck) {
         nrCardsInDeck = deck.size();
         cards = new ArrayList<>();
         for (CardInput card : deck) {
@@ -24,7 +24,7 @@ public final class Deck {
      * Deep copies a deck
      * @param deck
      */
-    public Deck(Deck deck) {
+    public Deck(final Deck deck) {
         nrCardsInDeck = deck.nrCardsInDeck;
         cards = new ArrayList<>();
         for (Card card : deck.getCards()) {

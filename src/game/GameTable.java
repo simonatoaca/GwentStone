@@ -3,21 +3,24 @@ package game;
 import cards.minion.MinionCard;
 
 public final class GameTable {
+    public static final int ROWS = 4;
+    public static final int COLUMNS = 5;
+
     private final MinionCard[][] table;
     private final int[] cardsOnRow;
 
     public GameTable() {
-        table = new MinionCard[4][5];
-        cardsOnRow = new int[4];
+        table = new MinionCard[ROWS][COLUMNS];
+        cardsOnRow = new int[ROWS];
     }
 
     /**
-     * Checks if there is space for one more card on a row
-     * @param numberOfRow
+     * Checks if there is space for one more card on a row.
+     * @param numberOfRow - the row that is checked
      * @return - true if there is space, false otherwise
      */
-    public boolean isSpaceOnRow(int numberOfRow) {
-        return cardsOnRow[numberOfRow] < 5;
+    public boolean isSpaceOnRow(final int numberOfRow) {
+        return cardsOnRow[numberOfRow] < COLUMNS;
     }
 
     /**
@@ -26,21 +29,22 @@ public final class GameTable {
      * @param numberOfRow
      * @param newCard
      */
-    public void addToRow(int numberOfRow, MinionCard newCard) {
+    public void addToRow(final int numberOfRow, final MinionCard newCard) {
         table[numberOfRow][cardsOnRow[numberOfRow]] = newCard;
         cardsOnRow[numberOfRow]++;
     }
 
     /**
      * Deletes a card from a certain position and rearranges
-     * the cards on that row by moving them to the left
+     * the cards on that row by moving them to the left.
      * @param numberOfRow
      * @param indexOfCard
      * @return - the card removed from the row
      */
-    public MinionCard deleteFromRow(int numberOfRow, int indexOfCard) {
+    public MinionCard deleteFromRow(final int numberOfRow, final int indexOfCard) {
         MinionCard card = table[numberOfRow][indexOfCard];
-        for (int position = indexOfCard; position < cardsOnRow[numberOfRow] - 1; position++) {
+        for (int position = indexOfCard; position
+                < cardsOnRow[numberOfRow] - 1; position++) {
             table[numberOfRow][position] = table[numberOfRow][position + 1];
         }
         table[numberOfRow][cardsOnRow[numberOfRow] - 1] = null;
@@ -54,9 +58,9 @@ public final class GameTable {
      * Usually called after an attack/use of ability
      * @param row
      */
-    public void checkForZeroHealth(int row) {
+    public void checkForZeroHealth(final int row) {
         int position = 0;
-        while (position < 5) {
+        while (position < COLUMNS) {
             if (table[row][position] != null) {
                 if (table[row][position].getHealth() <= 0) {
                     deleteFromRow(row, position);
@@ -68,12 +72,12 @@ public final class GameTable {
     }
 
     /**
-     * Gets the card at a given position in the table
+     * Gets the card at a given position in the table.
      * @param row
      * @param column
      * @return - The card at the specified position
      */
-    public MinionCard getCardFrom(int row, int column) {
+    public MinionCard getCardFrom(final int row, final int column) {
         return table[row][column];
     }
 
@@ -82,8 +86,8 @@ public final class GameTable {
      * Usually called after a round is over
      * @param playerTurn
      */
-    public void unfreezeCardsOfPlayer(PlayerTurn playerTurn) {
-        for (int col = 0; col < 5; col++) {
+    public void unfreezeCardsOfPlayer(final PlayerTurn playerTurn) {
+        for (int col = 0; col < COLUMNS; col++) {
             if (playerTurn == PlayerTurn.PLAYER1) {
                 if (table[2][col] != null) {
                     table[2][col].unfreezeCard();
@@ -108,8 +112,8 @@ public final class GameTable {
      * Usually called after a round is over
      * @param playerTurn
      */
-    public void cardsOfPlayerCanAttackAgain(PlayerTurn playerTurn) {
-        for (int col = 0; col < 5; col++) {
+    public void cardsOfPlayerCanAttackAgain(final PlayerTurn playerTurn) {
+        for (int col = 0; col < COLUMNS; col++) {
             if (playerTurn == PlayerTurn.PLAYER1) {
                 if (table[2][col] != null) {
                     table[2][col].hasRighToAttackAgain();
@@ -129,16 +133,17 @@ public final class GameTable {
     }
 
     /**
-     * Checks for a tank card on the front row of the enemy
+     * Checks for a tank card on the front row of the enemy.
      * @param attackerRow
      * @return - true if a tank card is found, false otherwise
      */
-    public boolean attackedPlayerHasTankCard(int attackerRow) {
+    public boolean attackedPlayerHasTankCard(final int attackerRow) {
         // Look at the enemy front row
         int enemyFrontRow = (attackerRow == 2 || attackerRow == 3) ? 1 : 2;
         for (int col = 0; col < cardsOnRow[enemyFrontRow]; col++) {
-            if (table[enemyFrontRow][col].isTank())
+            if (table[enemyFrontRow][col].isTank()) {
                 return true;
+            }
         }
         return false;
     }

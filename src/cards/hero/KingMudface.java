@@ -5,7 +5,7 @@ import cards.minion.MinionCard;
 
 public class KingMudface extends HeroCard {
 
-    public KingMudface(Card card) {
+    public KingMudface(final Card card) {
         super(card);
     }
 
@@ -13,7 +13,7 @@ public class KingMudface extends HeroCard {
      * {@inheritDoc}
      */
     @Override
-    public void useAbility(MinionCard card) {
+    public void useAbility(final MinionCard card) {
         card.addHealth(1);
     }
 }

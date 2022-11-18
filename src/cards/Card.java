@@ -22,7 +22,7 @@ public class Card {
 
     public Card() { };
 
-    public Card(CardInput card) {
+    public Card(final CardInput card) {
         mana = card.getMana();
         attackDamage = card.getAttackDamage();
         health = card.getHealth();
@@ -31,7 +31,7 @@ public class Card {
         name = card.getName();
     }
 
-    public Card(Card card) {
+    public Card(final Card card) {
         mana = card.getMana();
         attackDamage = card.getAttackDamage();
         health = card.getHealth();
@@ -41,11 +41,11 @@ public class Card {
     }
 
     /**
-     * Instantiates a new card depending on its type
+     * Instantiates a new card depending on its type.
      * @param card
      * @return - a subclass of Card
      */
-    public static Card getCardByType(Card card) {
+    public static Card getCardByType(final Card card) {
         switch (card.name) {
             case "Sentinel" -> {
                 return new Sentinel(card);
@@ -92,12 +92,14 @@ public class Card {
             case "General Kocioraw" -> {
                 return new GeneralKocioraw(card);
             }
+            default -> {
+                return new Card(card);
+            }
         }
-        return null;
     }
 
     /**
-     * Builds the format of the card for Json output
+     * Builds the format of the card for Json output.
      * @return - the ObjectNode containing the card print
      */
     public ObjectNode getCardPrint() {
@@ -123,46 +125,47 @@ public class Card {
      * Increases the health of the currrent card
      * @param addedHealth
      */
-    public void addHealth(int addedHealth) {
+    public void addHealth(final int addedHealth) {
         health += addedHealth;
     }
 
     /**
      * Increases the attackDamage of the currrent card
-     * @param attackDamageAdded
+     * @param attackDamageAdded - the attack to be added
      */
-    public void addAttackDamage(int attackDamageAdded) {
+    public void addAttackDamage(final int attackDamageAdded) {
         attackDamage += attackDamageAdded;
     }
 
     /**
      * Decreases the attackDamage of the current card
-     * @param attackDamageSubtracted
+     * @param attackDamageSubtracted - the attack to be subtracted
      */
-    public void subtractAttackDamage(int subtractedAttackDamage) {
+    public void subtractAttackDamage(final int subtractedAttackDamage) {
         attackDamage -= subtractedAttackDamage;
-        if (attackDamage < 0)
+        if (attackDamage < 0) {
             attackDamage = 0;
+        }
     }
 
     /**
-     * Decreases the health of the current card
-     * @param subtractedHealth
+     * Decreases the health of the current card.
+     * @param subtractedHealth - the health to be subtracted
      */
-    public void subtractHealth(int subtractedHealth) {
+    public void subtractHealth(final int subtractedHealth) {
         health -= subtractedHealth;
     }
 
     /**
-     * Get this card's mana
-     * @return
+     * Get this card's mana.
+     * @return - mana
      */
     public int getMana() {
         return mana;
     }
 
     /**
-     * Set this card's mana
+     * Set this card's mana.
      * @param mana
      */
     public void setMana(final int mana) {
@@ -170,7 +173,7 @@ public class Card {
     }
 
     /**
-     * Get the attackDamage of this card
+     * Get the attackDamage of this card.
      * @return
      */
     public int getAttackDamage() {
@@ -178,7 +181,7 @@ public class Card {
     }
 
     /**
-     * Set the attackDamage of this card
+     * Set the attackDamage of this card.
      * @param attackDamage
      */
     public void setAttackDamage(final int attackDamage) {
@@ -186,7 +189,7 @@ public class Card {
     }
 
     /**
-     * Get the health of this card
+     * Get the health of this card.
      * @return
      */
     public int getHealth() {
@@ -194,7 +197,7 @@ public class Card {
     }
 
     /**
-     * Set the health of this card
+     * Set the health of this card.
      * @param health
      */
     public void setHealth(final int health) {
@@ -202,7 +205,7 @@ public class Card {
     }
 
     /**
-     * Get the description of the current card
+     * Get the description of the current card.
      * @return
      */
     public String getDescription() {
@@ -210,7 +213,7 @@ public class Card {
     }
 
     /**
-     * Set the description of the current card
+     * Set the description of the current card.
      * @param description
      */
     public void setDescription(final String description) {
@@ -218,7 +221,7 @@ public class Card {
     }
 
     /**
-     * Get the colors of the current card
+     * Get the colors of the current card.
      * @return
      */
     public ArrayList<String> getColors() {
@@ -226,7 +229,7 @@ public class Card {
     }
 
     /**
-     * Set the colors of the current card
+     * Set the colors of the current card.
      * @param colors
      */
     public void setColors(final ArrayList<String> colors) {
@@ -234,7 +237,7 @@ public class Card {
     }
 
     /**
-     * Get the name of the current card
+     * Get the name of the current card.
      * @return
      */
     public String getName() {
@@ -242,7 +245,7 @@ public class Card {
     }
 
     /**
-     * Set the name of the current card
+     * Set the name of the current card.
      * @param name
      */
     public void setName(final String name) {
@@ -250,7 +253,7 @@ public class Card {
     }
 
     /**
-     * Get the type of the current card
+     * Get the type of the current card.
      * @return - the type (MINION, HERO, ENVIRONMENT)
      */
     public CardType getType() {
